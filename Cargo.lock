@@ -72,14 +72,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "git-aware"
-version = "0.1.0"
-dependencies = [
- "git2",
- "ignore",
-]
-
-[[package]]
 name = "git2"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -92,6 +84,14 @@ dependencies = [
  "openssl-probe",
  "openssl-sys",
  "url",
+]
+
+[[package]]
+name = "gitaware"
+version = "1.0.0"
+dependencies = [
+ "git2",
+ "ignore",
 ]
 
 [[package]]
