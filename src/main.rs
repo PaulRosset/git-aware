@@ -1,16 +1,20 @@
 
 mod git_actions;
+mod params_checker;
 
 use std::{env, process};
 use ignore::{WalkBuilder, WalkState};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
+use params_checker::{params_checker};
+
 /**
  * Walk through the provided path, recursively in parallel detect Git repository.
  * Open them and check their status.
  */
-fn get_git_results(path_to_directories: &str) {
+fn get_git_results(path_to_directories: &str) -> Result<i32, String> {
+    let mut git_repositories_scanned = 0;
     let entries = Arc::new(Mutex::new(vec![]));
     // Wall through targeted directory in parallel
     let files = WalkBuilder::new(path_to_directories).hidden(false).build_parallel();
@@ -25,8 +29,7 @@ fn get_git_results(path_to_directories: &str) {
      });
      let entries = entries.lock().unwrap().to_vec();
      if entries.len() == 0 {
-        eprintln!("Error: No files have been detected with the path you provided.");
-        process::exit(1);
+        return Err("Error: No files have been detected with the path you provided.".to_string());
      }
      for entry in entries.to_vec() {
         let path = entry.path().display();
@@ -41,33 +44,86 @@ fn get_git_results(path_to_directories: &str) {
                     } else {
                         println!("❌ - {}\n \tWorking directory dirty", path_to_open_repo);
                     }
+                    git_repositories_scanned += 1;
                 },
-                Err(err) => panic!("An Error has been encountered while detecting statuses on git repository: {}\n - {}.", path_to_open_repo, err)
+                Err(err) => return Err(format!("An Error has been encountered while detecting statuses on git repository: {}\n - {}.", path_to_open_repo, err))
             }
         }
      }
+     return Ok(git_repositories_scanned);
 }
 
 
 fn main() {
     let now = Instant::now();
-    let args: Vec<String> = env::args().collect();
-    if args.len() == 1 {
-        println!("No argument -p passed, taking the current directory as default. ('./')\n");
-        get_git_results("./");
-        return;
-    }
-    let get_p_flag = args.contains(&"-p".to_string());
-    if !get_p_flag {
-        eprintln!("The flag -p followed with the right path is mandatory to specify a customized path.");
-        process::exit(1);
-    }
-    match args.last() {
-        Some(path) => get_git_results(path),
-        None => {
-            eprintln!("You must specify specify a path after using -p option: -p MYPATH.");
+    let argv: Vec<String> = env::args().collect();
+    let config = params_checker(&argv);
+    match config {
+        Ok(config) => {
+            if config.default {
+                println!("No argument -p passed, taking the current directory as default. ('./')\n");
+                match get_git_results(config.path) {
+                    Ok(git_repositories_scanned) => {
+                        println!("\nRepositories scanned: {:?}", git_repositories_scanned);
+                    },
+                    Err(msg) => {
+                        eprintln!("{}", msg);
+                        process::exit(1);
+                    }
+                };
+            }
+            match get_git_results(config.path) {
+                Ok(git_repositories_scanned) => {
+                    println!("\nRepositories scanned: {:?}", git_repositories_scanned);
+                },
+                Err(msg) => {
+                    eprintln!("{}", msg);
+                    process::exit(1);
+                }
+            };
+        },
+        Err(msg) => {
+            eprintln!("{}", msg);
             process::exit(1);
         }
     };
     println!("\nScanned in: {:.2?}", now.elapsed());
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::get_git_results;
+
+    #[test]
+    fn test_params_checker_when_invalid_path() {
+        let path = "path_that_does_not_exists";
+        let result = get_git_results(path);
+        match result {
+            Ok(_) => todo!(),
+            Err(msg) => {
+                assert_eq!(msg, "Error: No files have been detected with the path you provided.")
+            }
+        }
+    }
+
+    #[test]
+    fn test_params_checker_it_should_not_detect_any_repo() {
+        let path = "./src";
+        let result = get_git_results(path);
+        match result {
+            Ok(git_repositories_scanned) => assert_eq!(git_repositories_scanned, 0),
+            Err(_) => todo!()
+        }
+    }
+
+    #[test]
+    fn test_params_checker_it_works() {
+        let path = "./";
+        let result = get_git_results(path);
+        match result {
+            Ok(git_repositories_scanned) => assert_eq!(git_repositories_scanned, 1),
+            Err(_) => todo!()
+        }
+    }
 }
