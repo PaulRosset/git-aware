@@ -1,10 +1,10 @@
 [package]
 name = "gitaware"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["Paul Rosset <paulrosset96@gmail.com>"]
 license = "MIT"
-description = "Git Aware is a **command line tool** that aims to make it easier to detect any dirty working copy in projects that uses Git"
+description = "Git Aware is a command line tool that aims to make it easier to detect any dirty working copy in projects that uses Git"
 readme = "README.md"
 homepage = "https://github.com/PaulRosset/git-aware"
 repository = "https://github.com/PaulRosset/git-aware"
