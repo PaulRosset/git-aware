@@ -12,8 +12,8 @@ The CLI tool will scan and identify all the Git repositories on your system and 
 
 To use it, there is multiples possibilities:
 
-- You can either download the binary for Apple Mac User (Intel chip) [here](https://github.com/PaulRosset/git-aware/releases/tag/1.0.0).
-- If you are not on a MAC you can serve the binary yourself by running `cargo build --release` at the root of the repository, the binary will be served under `target/release/gitaware`
+- You can run `cargo install gitaware`
+- Or you can serve the binary yourself by running `cargo build --release` at the root of the repository, the binary will be served under `target/release/gitaware`
 
 Once the binary is located on your machine, to use it simply do:
 
