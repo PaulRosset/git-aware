@@ -38,11 +38,11 @@ fn get_git_results(path_to_directories: &str) -> Result<i32, String> {
             // Get status of git repository.
             let result = git_actions::is_git_working_directory_clean(&path_to_open_repo);
             match result {
-                Ok(is_repo_clean) => {
-                    if is_repo_clean {
-                        println!("✅ - {}:\n \tWorking directory clean.", path_to_open_repo);
+                Ok(repo_data) => {
+                    if repo_data.is_empty_status {
+                        println!("✅ - {}:\n \tWorking directory {} {} clean.", path_to_open_repo, repo_data.branch_name, if repo_data.is_detached {"DETACHED"} else {""});
                     } else {
-                        println!("❌ - {}\n \tWorking directory dirty", path_to_open_repo);
+                        println!("❌ - {}\n \tWorking directory {} {} clean.", path_to_open_repo, repo_data.branch_name, if repo_data.is_detached {"DETACHED"} else {""})
                     }
                     git_repositories_scanned += 1;
                 },
